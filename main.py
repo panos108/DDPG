@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+from utilities import *
 
 problem = "Pendulum-v0"
 env = gym.make(problem)
@@ -42,9 +42,10 @@ for ep in range(num_episodes):
 
     while not done:
         # Query the agent for an action to take in the state
+        # Change the state to get previous states and deviations
         action = agent.get_action(state)
         # Take the action in the environment
-        next_state, reward, done, info = env.step(action)
+        next_state, reward, done, info = env.step(action)  # Change this to run with the regular funcs
         next_state += 0.2*np.random.rand()
         # Train the agent with the new time step experience
         agent.train(state, action, next_state, reward, int(done))
@@ -52,7 +53,6 @@ for ep in range(num_episodes):
         total_reward += reward
         # Update the current state
         state = next_state
-    print(reward)
 
     # Store the last episode's total reward
     scores.append(total_reward)
@@ -60,4 +60,4 @@ for ep in range(num_episodes):
     scores_buffer.append(total_reward)
     # Store the new average reward
     avg_scores.append(np.mean(scores_buffer))
-    print("Episode: {}, Score: {}, Avg reward: {:.2f}".format(ep, scores[ep], avg_scores[ep]))
+    print("Episode: , Score: , Avg reward: ".format(ep, scores[ep], avg_scores[ep]))

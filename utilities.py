@@ -121,11 +121,11 @@ class ActorCriticAgent():
     # Initializing the agent and the model for selecting actions
     def __init__(self, model, network=PTACNetwork):
         # The number of state values in the state vector
-        state_size = np.prod(model.observation_space.shape)# model.nx#
+        state_size = model.nx#np.prod(model.observation_space.shape)# 
         # The number of action indices to select from
-        action_size =np.prod(model.action_space.shape) # model.nu#
+        action_size = model.nu#np.prod(model.action_space.shape) #
         # The continuous range of the actions
-        action_range = [model.action_space.low, model.action_space.high] # [model.u_min, model.u_max]#
+        action_range = [model.u_min, model.u_max]# [model.action_space.low, model.action_space.high] #
         # Defining the q network to use for modeling the Bellman equation
         self.q_network = network(state_size, action_size, action_range)
         # Defining the replay buffer for experience replay

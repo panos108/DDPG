@@ -119,13 +119,13 @@ class OUNoise():
 
 class ActorCriticAgent():
     # Initializing the agent and the model for selecting actions
-    def __init__(self, env, network=PTACNetwork):
+    def __init__(self, model, network=PTACNetwork):
         # The number of state values in the state vector
-        state_size = np.prod(env.observation_space.shape)
+        state_size = np.prod(model.observation_space.shape)# model.nx#
         # The number of action indices to select from
-        action_size = np.prod(env.action_space.shape)
+        action_size =np.prod(model.action_space.shape) # model.nu#
         # The continuous range of the actions
-        action_range = [env.action_space.low, env.action_space.high]
+        action_range = [model.action_space.low, model.action_space.high] # [model.u_min, model.u_max]#
         # Defining the q network to use for modeling the Bellman equation
         self.q_network = network(state_size, action_size, action_range)
         # Defining the replay buffer for experience replay

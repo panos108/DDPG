@@ -17,9 +17,9 @@ class Actor(nn.Module):
         self.action = nn.Linear(100, action_size)
 
     def forward(self, state):
-        layer1 = F.relu(self.layer1(state))
-        layer2 = F.relu(self.layer2(layer1))
-        layer3 = F.relu(self.layer3(layer1))
+        layer1 = F.tanh(self.layer1(state))
+        layer2 = F.tanh(self.layer2(layer1))
+        layer3 = F.tanh(self.layer3(layer1))
         action = torch.tanh(self.action(layer3))
         return self.action_low + (self.action_high - self.action_low) * action
 
@@ -33,10 +33,10 @@ class Critic(nn.Module):
         self.q_value = nn.Linear(100, 1)
 
     def forward(self, state, action):
-        net_state = F.relu(self.net_state(state))
-        net_action = F.relu(self.net_action(action))
+        net_state = F.tanh(self.net_state(state))
+        net_action = F.tanh(self.net_action(action))
         net_state_action = torch.cat([net_state, net_action], dim=1)
-        net_layer = F.relu(self.net_layer(net_state_action))
+        net_layer = F.tanh(self.net_layer(net_state_action))
         q_value = self.q_value(net_layer)
         return q_value
 
@@ -137,6 +137,10 @@ class ActorCriticAgent():
     def get_action(self, state):
         # Get the action from the network and add noise to it
         return self.q_network.get_action([state])[0] + self.noise_process.sample()
+
+    def get__deterministic_action(self, state):
+        # Get the action from the network and add noise to it
+        return self.q_network.get_action([state])[0]# + self.noise_process.sample()
 
     # Function for training the agent at each time step
     def train(self, state, action, next_state, reward, done, batch_size=100):

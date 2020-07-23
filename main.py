@@ -11,14 +11,14 @@ import torch.optim as optim
 from models import model_simple
 from utilities import *
 
-problem = "Pendulum-v0"
-model = gym.make(problem)
-#model = model_simple()
-num_states = model.observation_space.shape[0]
-num_actions = model.action_space.shape[0]
-
-upper_bound = model.action_space.high[0]
-lower_bound = model.action_space.low[0]
+# problem = "Pendulum-v0"
+#model = gym.make(problem)
+model = model_simple()
+# num_states = model.observation_space.shape[0]
+# num_actions = model.action_space.shape[0]
+#
+# upper_bound = model.action_space.high[0]
+# lower_bound = model.action_space.low[0]
 
 
 # Create an agent instance
@@ -47,7 +47,7 @@ for ep in range(num_episodes):
         # Change the state to get previous states and deviations
         u = agent.get_action(state)
         # Take the action in the environment
-        next_state, reward, done, info = model.step(u)  # model.simulate(state, u, t, 0.)#Change this to run with the regular funcs
+        next_state, reward, done =  model.simulate(state, u, t, 0.)#model.step(u)  #Change this to run with the regular funcs
         #next_state += 0.2*np.random.rand()
         # Train the agent with the new time step experience
         agent.train(state, u, next_state, reward, int(done))

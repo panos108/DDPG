@@ -121,7 +121,7 @@ class ActorCriticAgent():
     # Initializing the agent and the model for selecting actions
     def __init__(self, model, network=PTACNetwork):
         # The number of state values in the state vector
-        state_size = model.nx#np.prod(model.observation_space.shape)# 
+        state_size = model.nx#np.prod(model.observation_space.shape)#
         # The number of action indices to select from
         action_size = model.nu#np.prod(model.action_space.shape) #
         # The continuous range of the actions

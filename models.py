@@ -18,7 +18,7 @@ class model_simple():
     def simulate(self, x0, u, t, ref):
         done = False
         next_state = x0*0.99 + u
-        reward = -np.abs(next_state-ref)
+        reward = -(next_state-ref)**2 - 0.01 * (u)**2
         if t>=20 or -reward<=1e-5:
             done = True
         return next_state, reward, done

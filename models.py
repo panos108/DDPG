@@ -10,7 +10,7 @@ class model_simple():
     def specifications(self):
         nu = 1
         nx = 1
-        u_min = np.double(np.array([0.]))  # lower bound of inputs
+        u_min = np.double(np.array([-1.]))  # lower bound of inputs
         u_max = np.double(np.array([1.])) # upper bound of inputs
         x0    = 1
         return u_min, u_max, nu, nx, x0

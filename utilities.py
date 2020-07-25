@@ -17,10 +17,10 @@ class Actor(nn.Module):
         self.action = nn.Linear(100, action_size)
 
     def forward(self, state):
-        layer1 = F.tanh(self.layer1(state))
-        layer2 = F.tanh(self.layer2(layer1))
-        layer3 = F.tanh(self.layer3(layer1))
-        action = torch.tanh(self.action(layer3))
+        layer1 = torch.tanh(self.layer1(state))
+        layer2 = torch.tanh(self.layer2(layer1))
+        layer3 = torch.tanh(self.layer3(layer1))
+        action = torch.sigmoid(self.action(layer3))
         return self.action_low + (self.action_high - self.action_low) * action
 
 

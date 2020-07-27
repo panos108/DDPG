@@ -17,11 +17,11 @@ class Actor(nn.Module):
         self.action = nn.Linear(100, action_size)
 
     def forward(self, state):
-        layer1 = torch.tanh(self.layer1(state))
-        layer2 = torch.tanh(self.layer2(layer1))
-        layer3 = torch.tanh(self.layer3(layer1))
-        action = torch.sigmoid(self.action(layer3))
-        return self.action_low + (self.action_high - self.action_low) * action
+        layer1 = torch.relu(self.layer1(state))
+        # layer2 = torch.relu(self.layer2(layer1))
+        layer3 = torch.relu(self.layer3(layer1))
+        action = (self.action(layer3))
+        return self.action_low + (self.action_high - self.action_low) * torch.sigmoid(action)
 
 
 class Critic(nn.Module):
@@ -33,10 +33,10 @@ class Critic(nn.Module):
         self.q_value = nn.Linear(100, 1)
 
     def forward(self, state, action):
-        net_state = F.tanh(self.net_state(state))
-        net_action = F.tanh(self.net_action(action))
+        net_state = F.relu(self.net_state(state))
+        net_action = F.relu(self.net_action(action))
         net_state_action = torch.cat([net_state, net_action], dim=1)
-        net_layer = F.tanh(self.net_layer(net_state_action))
+        net_layer = F.relu(self.net_layer(net_state_action))
         q_value = self.q_value(net_layer)
         return q_value
 
@@ -56,7 +56,7 @@ class PTACNetwork():
         action = self.actor_local(state).detach().numpy()
         return action
 
-    def update_model(self, state, action, next_state, reward, done, gamma=0.97):
+    def update_model(self, state, action, next_state, reward, done, gamma=0.99):
         states = torch.from_numpy(np.vstack(state)).float()
         actions = torch.from_numpy(np.vstack(action)).float()
         next_states = torch.from_numpy(np.vstack(next_state)).float()
@@ -98,7 +98,7 @@ class ReplayBuffer():
 
 
 class OUNoise():
-    def __init__(self, size, scale, mu=0.0, sigma=0.4, theta=0.15, decay=0.99):
+    def __init__(self, size, scale, mu=0.0, sigma=0.2, theta=0.15, decay=0.99):
         self.noise = np.zeros(size)
         self.size = size
         self.scale = scale
@@ -132,18 +132,20 @@ class ActorCriticAgent():
         self.replay_buffer = ReplayBuffer(100000)
         # Initializing the epsilon value to 1.0 for initial exploration
         self.noise_process = OUNoise(action_size, action_range[1] - action_range[0])
+        self.action_range   = action_range
 
     # Function for getting an action to take in the given state
     def get_action(self, state):
         # Get the action from the network and add noise to it
-        return self.q_network.get_action([state])[0] + self.noise_process.sample()
+        return self.q_network.get_action([state])[0] + self.noise_process.sample()#, self.action_range[0], self.action_range[1])
 
     def get__deterministic_action(self, state):
         # Get the action from the network and add noise to it
-        return self.q_network.get_action([state])[0]# + self.noise_process.sample()
+        return np.clip(self.q_network.get_action([state])[0],
+                       self.action_range[0], self.action_range[1])# + self.noise_process.sample()
 
     # Function for training the agent at each time step
-    def train(self, state, action, next_state, reward, done, batch_size=100):
+    def train(self, state, action, next_state, reward, done, batch_size=300):
         # First add the experience to the replay buffer
         self.replay_buffer.add((state, action, next_state, reward, done))
         # Sample a batch of each experience type from the replay buffer

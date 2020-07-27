@@ -69,7 +69,7 @@ class ModelIntegration:
         self.parameters = parameters
         self.u_min = np.double(np.array([0.]))  # lower bound of inputs
         self.u_max = np.double(np.array([1.]))  # upper bound of inputs
-        self.nx, self.nu, self.x_init = 2, 1, np.array([0, 0])
+        self.nx, self.nu, self.x_init = 2, 1, np.array([0., 0.])
 
     # --- dynamic model definition --- #
     def model(self, t, state):

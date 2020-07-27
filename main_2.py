@@ -1,4 +1,4 @@
-import gym
+# import gym
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +43,7 @@ model = ModelIntegration(p)  # model_double_intergator()
 agent = ActorCriticAgent(model, network=PTACNetwork)
 print(2)
 # Define number of episodes to train for
-num_episodes = 2000
+num_episodes = 20
 # Create a buffer for calculating the last 100 episode average reward
 scores_buffer = deque(maxlen=150)
 # List to store each episode's total reward
@@ -51,6 +51,10 @@ scores = []
 # List to store the average reward after each episode
 avg_scores = []
 # Run the training loop
+u_his = np.zeros([model.nu,501,num_episodes])
+x_his = np.zeros([model.nx,501,num_episodes])
+
+
 for ep in range(num_episodes):
     # Save the initial state
     state = model.reset()
@@ -59,22 +63,37 @@ for ep in range(num_episodes):
     total_reward = 0
     # Reset the episode terminal condition
     done = False
+    i = 0
     if ep == num_episodes - 1:
         states = []
         uu = []
+
     while t < 5:  # not done:
         # if t%100==0:
         #   state = xx[ep*t+1]
         # Query the agent for an action to take in the state
         # Change the state to get previous states and deviations
-        for ii in range(100):
-            u = agent.get_action(np.array(state)/[4,2])
-            k = 0
-            for i in range(model.nu):
-                if u[i]>model.u_min-0.00001 and u[i]<model.u_max+0.00001:
-                   k+=1
-            if k==model.nu:
-                break
+        # for ii in range(100):
+
+        F_nom = p["F_nom"]
+        F_dev = p["F_dev"]
+        freq = p["freq"]
+
+        # algebraic equations
+        d = F_nom + F_dev * sin(t / freq)
+        state[1] = d
+        u = agent.get_action(np.array(state))
+
+        u_his[:,i,ep] = u
+        x_his[:,i,ep] = state
+        i+=1
+
+        #     k = 0
+        #     for i in range(model.nu):
+        #         if u[i]>model.u_min-0.00001 and u[i]<model.u_max+0.00001:
+        #            k+=1
+        #     if k==model.nu:
+        #         break
         # Take the action in the environment
         # next_state, reward, done, info =model.step(u)  # Change this to run with the regular funcs
         # print('before: ', u)
@@ -82,22 +101,18 @@ for ep in range(num_episodes):
 
 
         # print('after: ', u)
-        # for i in range(model.nu):
-        #   u[i] = 2*np.sin(u[i])
-        # if u[i]<model.u_min:
-        #   u[i] = model.u_min
-        # elif u[i]>model.u_max:
-        #   u[i] = model.u_max
-        F_nom = p["F_nom"]
-        F_dev = p["F_dev"]
-        freq = p["freq"]
+        for k in range(model.nu):
+          u[k] = 2*np.sin(u[k])
+        if u[k]<model.u_min:
+          u[k] = model.u_min
+        elif u[k]>model.u_max:
+          u[k] = model.u_max
 
-        # algebraic equations
-        d = F_nom + F_dev * sin(t / freq)
         if ep == num_episodes - 1:
             uu += [u]
             states += [state]
-        next_state, reward, done = m.simulation(u.reshape((-1,)), 0.01, np.array([[state[0], 0]]).reshape((-1,)), d)
+        next_state, reward, done = m.simulation(u.reshape((-1,)), 0.01,
+                                                np.array([[state[0], 0]]).reshape((-1,)), d)
 
         # next_state, reward, done =model.simulate(state, u, t, 0.0)# model.step(u)  # Change this to run with the regular funcs
         # next_state += 0.2*np.random.rand()
@@ -119,3 +134,75 @@ for ep in range(num_episodes):
 
 plt.plot(states)
 print(2)
+
+
+
+u_test = np.zeros([model.nu,501,num_episodes])
+x_test = np.zeros([model.nx,501,num_episodes])
+for ep1 in range(1):
+    # Save the initial state
+    state = model.reset()
+    t = 0
+    # Reset the total reward
+    total_reward = 0
+    # Reset the episode terminal condition
+    done = False
+    ii = 0
+    if ep1 == 1 - 1:
+        states = []
+        uu = []
+
+    while t < 5:  # not done:
+        # if t%100==0:
+        #   state = xx[ep*t+1]
+        # Query the agent for an action to take in the state
+        # Change the state to get previous states and deviations
+        # for ii in range(100):
+
+        F_nom = p["F_nom"]
+        F_dev = p["F_dev"]
+        freq = p["freq"]
+
+        # algebraic equations
+        d = F_nom + F_dev * sin(t / freq)
+        state[1] = d
+        u = agent.get__deterministic_action(np.array(state))
+
+        u_test[:,ii,ep1] = u
+        x_test[:,ii,ep1] = state
+        ii+=1
+
+        #     k = 0
+        #     for i in range(model.nu):
+        #         if u[i]>model.u_min-0.00001 and u[i]<model.u_max+0.00001:
+        #            k+=1
+        #     if k==model.nu:
+        #         break
+        # Take the action in the environment
+        # next_state, reward, done, info =model.step(u)  # Change this to run with the regular funcs
+        # print('before: ', u)
+        # if ep >3:
+
+
+        # print('after: ', u)
+        # for i in range(model.nu):
+        #   u[i] = 2*np.sin(u[i])
+        # if u[i]<model.u_min:
+        #   u[i] = model.u_min
+        # elif u[i]>model.u_max:
+        #   u[i] = model.u_max
+
+
+        next_state, reward, done = m.simulation(u.reshape((-1,)), 0.01,
+                                                np.array([[state[0], 0]]).reshape((-1,)), d)
+
+        # next_state, reward, done =model.simulate(state, u, t, 0.0)# model.step(u)  # Change this to run with the regular funcs
+        # next_state += 0.2*np.random.rand()
+        # Train the agent with the new time step experience
+
+       # Update the episode's total reward
+        total_reward += reward
+        # Update the current state
+        state = next_state
+        t += 0.01
+

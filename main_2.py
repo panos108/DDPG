@@ -9,19 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from utilities import *
 from models import *
-# problem = "Pendulum-v0"
-# model = gym.make(problem)
-dt = 0.5
-# num_states = model.observation_space.shape[0]
-# num_actions = model.action_space.shape[0]
 
-# upper_bound = model.action_space.high[0]
-# lower_bound = model.action_space.low[0]
-# state = model.reset()
-
-# next_state, reward, done, info =model.step([0])
-# print(next_state)
-# Create an agent instance
 from pylab import *
 
 p = {"F_nom": 1.5,  # m3/s
@@ -75,11 +63,7 @@ for ep in range(num_episodes):
         uu = []
 
     while t < 5:  # not done:
-        # if t%100==0:
-        #   state = xx[ep*t+1]
-        # Query the agent for an action to take in the state
-        # Change the state to get previous states and deviations
-        # for ii in range(100):
+
 
 
         x0[1] = d
@@ -87,18 +71,6 @@ for ep in range(num_episodes):
 
         u = agent.get_action(np.array(state))#state))
 
-
-
-        #     k = 0
-        #     for i in range(model.nu):
-        #         if u[i]>model.u_min-0.00001 and u[i]<model.u_max+0.00001:
-        #            k+=1
-        #     if k==model.nu:
-        #         break
-        # Take the action in the environment
-        # next_state, reward, done, info =model.step(u)  # Change this to run with the regular funcs
-        # print('before: ', u)
-        # if ep >3:
 
 
         # print('after: ', u)
@@ -121,11 +93,15 @@ for ep in range(num_episodes):
         x1[1] = d
         x0 = x1.copy()
 
+<<<<<<< HEAD
         next_state = hist_states.append_history(x1, u)
         #next_state = x1
         # next_state, reward, done =model.simulate(state, u, t, 0.0)# model.step(u)  # Change this to run with the regular funcs
         # next_state += 0.2*np.random.rand()
         # Train the agent with the new time step experience
+=======
+
+>>>>>>> e4d92697b3713432ea4a01b72bc68a43b46d8d91
         agent.train(state, u, next_state, reward, int(done))
         # Update the episode's total reward
         total_reward += reward
@@ -168,12 +144,7 @@ for ep1 in range(1):
         uu = []
 
     while t < 5:  # not done:
-        # if t%100==0:
-        #   state = xx[ep*t+1]
-        # Query the agent for an action to take in the state
-        # Change the state to get previous states and deviations
-        # for ii in range(100):
-
+ 
         F_nom = p["F_nom"]
         F_dev = p["F_dev"]
         freq = p["freq"]
@@ -187,25 +158,7 @@ for ep1 in range(1):
         x_test[:,ii,ep1] = state
         ii+=1
 
-        #     k = 0
-        #     for i in range(model.nu):
-        #         if u[i]>model.u_min-0.00001 and u[i]<model.u_max+0.00001:
-        #            k+=1
-        #     if k==model.nu:
-        #         break
-        # Take the action in the environment
-        # next_state, reward, done, info =model.step(u)  # Change this to run with the regular funcs
-        # print('before: ', u)
-        # if ep >3:
 
-
-        # print('after: ', u)
-        # for i in range(model.nu):
-        #   u[i] = 2*np.sin(u[i])
-        # if u[i]<model.u_min:
-        #   u[i] = model.u_min
-        # elif u[i]>model.u_max:
-        #   u[i] = model.u_max
 
 
         next_state, reward, done = m.simulation(u.reshape((-1,)), 0.01,

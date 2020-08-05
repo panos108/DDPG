@@ -145,6 +145,7 @@ u_test = np.zeros([model.nu,501,num_episodes])
 x_test = np.zeros([model.nx,501,num_episodes])
 for ep in range(1):
     # Save the initial state
+    
     x0 = model.reset()
     t = 0
     # Reset the total reward

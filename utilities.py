@@ -17,9 +17,10 @@ class Actor(nn.Module):
         self.action = nn.Linear(100, action_size)
 
     def forward(self, state):
-        layer1 = torch.relu(self.layer1(state))
-        # layer2 = torch.relu(self.layer2(layer1))
-        layer3 = torch.relu(self.layer3(layer1))
+        m      = torch.nn.Tanh()#0.01)
+        layer1 = m(self.layer1(state))
+        # layer2 =m(self.layer2(layer1))
+        layer3 = m(self.layer3(layer1))
         action = (self.action(layer3))
         return self.action_low + (self.action_high - self.action_low) * torch.sigmoid(action)
 
@@ -33,10 +34,10 @@ class Critic(nn.Module):
         self.q_value = nn.Linear(100, 1)
 
     def forward(self, state, action):
-        net_state = F.relu(self.net_state(state))
-        net_action = F.relu(self.net_action(action))
+        net_state = F.leaky_relu(self.net_state(state))
+        net_action = F.leaky_relu(self.net_action(action))
         net_state_action = torch.cat([net_state, net_action], dim=1)
-        net_layer = F.relu(self.net_layer(net_state_action))
+        net_layer = F.leaky_relu(self.net_layer(net_state_action))
         q_value = self.q_value(net_layer)
         return q_value
 
@@ -121,7 +122,7 @@ class ActorCriticAgent():
     # Initializing the agent and the model for selecting actions
     def __init__(self, model, network=PTACNetwork):
         # The number of state values in the state vector
-        state_size = model.nx#np.prod(model.observation_space.shape)#
+        state_size = model.size_states#np.prod(model.observation_space.shape)#
         # The number of action indices to select from
         action_size = model.nu#np.prod(model.action_space.shape) #
         # The continuous range of the actions
@@ -129,7 +130,7 @@ class ActorCriticAgent():
         # Defining the q network to use for modeling the Bellman equation
         self.q_network = network(state_size, action_size, action_range)
         # Defining the replay buffer for experience replay
-        self.replay_buffer = ReplayBuffer(100000)
+        self.replay_buffer = ReplayBuffer(50000)
         # Initializing the epsilon value to 1.0 for initial exploration
         self.noise_process = OUNoise(action_size, action_range[1] - action_range[0])
         self.action_range   = action_range
@@ -145,7 +146,7 @@ class ActorCriticAgent():
                        self.action_range[0], self.action_range[1])# + self.noise_process.sample()
 
     # Function for training the agent at each time step
-    def train(self, state, action, next_state, reward, done, batch_size=300):
+    def train(self, state, action, next_state, reward, done, batch_size=128*2):
         # First add the experience to the replay buffer
         self.replay_buffer.add((state, action, next_state, reward, done))
         # Sample a batch of each experience type from the replay buffer
@@ -154,3 +155,48 @@ class ActorCriticAgent():
         self.q_network.update_model(states, actions, next_states, rewards, dones)
         # Decrease epsilon after each episode
         if done: self.noise_process.reset()
+
+
+
+class cosntract_history:
+    def __init__(self, model, N, store_u = True):
+        #Define self vars
+        self.model   = model           # The model defined in terms of casadi
+        self.N       = N               # Number of past data
+        self.store_u = store_u
+        self.nx      = model.nx
+        self.nu      = model.nu
+        self.u_min   = model.u_min
+        self.u_max   = model.u_max
+        state_0 = model.reset()
+        # initialize history
+        history_x = np.array([*state_0]*N).reshape((-1,1))
+        if store_u:                  # If u are stored as history (simple RNN structure)
+            history_u = np.array([0]*N*model.nu).reshape((-1,1))
+            self.history = np.vstack((history_x,history_u))
+            self.size_states = N * (model.nu + model.nx)
+        else:
+            self.history = history_x
+            self.size_states = N * (model.nx)
+
+        self.history = self.history.reshape((-1,))
+        # start counting the past values
+        self.past = 1
+
+
+    def append_history(self, new_state, u):
+
+        if self.store_u:
+            n = self.model.nx+self.model.nu
+            self.history[n:] = self.history[:n*(self.N-1)]
+            aug_states = np.concatenate((new_state, u))
+            self.history[:n] = aug_states
+
+        else:
+            n = self.model.nx
+            self.history[n:] = self.history[:n*(self.N-1)]
+
+            self.history[:n] = new_state
+        self.past +=1
+
+        return self.history

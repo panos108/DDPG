@@ -152,7 +152,8 @@ class simple_CSTR:
         self.u_min = np.double(np.array([0.]))  # lower bound of inputs
         self.u_max = np.double(np.array([1.]))  # upper bound of inputs
         self.nx, self.nu, self.x_init = 1, 1, np.array([(0.2-0.5)/0.5])
-        self.dt = 0.1
+        self.nsp   = self.nx
+        self.dt    = 0.1
     # --- dynamic model definition --- #
     def model(self, t, state):
         # internal definitions
@@ -169,10 +170,10 @@ class simple_CSTR:
         return np.array([dc], dtype='float64')
 
     # --- simulation --- #
-    def reset(self):
-        return self.x_init
+    def reset(self, set_point):
+        return self.x_init, self.x_init - set_point
 
-    def simulation(self, controls, tf, x0):
+    def simulation(self, controls, tf, x0, set_point):
         '''
         u shape -> (u_{dim},steps)
         '''
@@ -203,8 +204,8 @@ class simple_CSTR:
             current_state = list(ode.integrate(ode.t + dt))  # integrate system
             xt[:, s + 1] = current_state  # add current state
             tt[s + 1] = (s + 1) * dt
-
-        reward = -(abs(xt[0, -1] - 0.3))#  - 0.01* controls**2
+        e_sp   = xt[0, -1] - set_point
+        reward = -(abs(xt[0, -1] - set_point))#  - 0.01* controls**2
         done = False
 
-        return [(xt[0, -1]-0.5)/0.5], (reward), done
+        return [(xt[0, -1]-0.5)/0.5], np.array([e_sp]), (reward), done

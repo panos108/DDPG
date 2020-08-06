@@ -159,7 +159,7 @@ class ActorCriticAgent():
 
 
 class cosntract_history:
-    def __init__(self, model, N, store_u = True):
+    def __init__(self, model, N, store_u = True, set_point0 = 0.):
         #Define self vars
         self.model   = model           # The model defined in terms of casadi
         self.N       = N               # Number of past data
@@ -168,35 +168,38 @@ class cosntract_history:
         self.nu      = model.nu
         self.u_min   = model.u_min
         self.u_max   = model.u_max
-        state_0 = model.reset()
+        state_0, e_sp0 = model.reset(set_point0)
         # initialize history
         history_x = np.array([*state_0]*N).reshape((-1,1))
+        history_sp = np.array([*e_sp0]*N).reshape((-1,1))
+
         if store_u:                  # If u are stored as history (simple RNN structure)
             history_u = np.array([0]*N*model.nu).reshape((-1,1))
-            self.history = np.vstack((history_x,history_u))
-            self.size_states = N * (model.nu + model.nx)
+            self.history = np.vstack((history_x,history_sp,history_u))
+            self.size_states = N * (model.nu + model.nx + model.nsp)
         else:
-            self.history = history_x
-            self.size_states = N * (model.nx)
+            self.history = np.vstack((history_x,history_sp))
+            self.size_states = N * (model.nx+model.nsp)
 
         self.history = self.history.reshape((-1,))
         # start counting the past values
         self.past = 1
 
 
-    def append_history(self, new_state, u):
+    def append_history(self, new_state, u, e_sp):
 
         if self.store_u:
-            n = self.model.nx+self.model.nu
+            n = self.model.nx+self.model.nu + self.model.nsp
             self.history[n:] = self.history[:n*(self.N-1)]
-            aug_states = np.concatenate((new_state, u))
+            aug_states = np.concatenate((new_state, e_sp, u))
             self.history[:n] = aug_states
 
         else:
-            n = self.model.nx
+            n = self.model.nx+ self.model.nsp
             self.history[n:] = self.history[:n*(self.N-1)]
+            aug_states = np.concatenate((new_state, e_sp))
 
-            self.history[:n] = new_state
+            self.history[:n] = aug_states
         self.past +=1
 
         return self.history

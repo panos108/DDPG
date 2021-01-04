@@ -24,8 +24,8 @@ class model_simple():
             done = True
         return next_state, reward, done
 
-    def reset(self):
-        return self.x0
+    def reset(self, set_point):
+        return self.x0, self.x0 - set_point
 
 
 class model_double_intergator():
@@ -53,8 +53,9 @@ class model_double_intergator():
             done = True
         return next_state.reshape(self.nx, ), reward, done
 
-    def reset(self):
-        return self.x0
+    def reset(self, set_point):
+        return self.x0, self.x0 - set_point
+
 
 
 class ModelIntegration:
@@ -70,6 +71,7 @@ class ModelIntegration:
         self.u_min = np.double(np.array([0.]))  # lower bound of inputs
         self.u_max = np.double(np.array([1.]))  # upper bound of inputs
         self.nx, self.nu, self.x_init = 2, 1, np.array([-1., 0.])
+        self.nsp   = 0
 
     # --- dynamic model definition --- #
     def model(self, t, state):
@@ -95,8 +97,8 @@ class ModelIntegration:
         return np.array([dV, dtank_t], dtype='float64')
 
     # --- simulation --- #
-    def reset(self):
-        return self.x_init
+    def reset(self, set_point):
+        return self.x_init, np.array([])#self.x_init - set_point
 
     def simulation(self, controls, tf, x0, d):
         '''
@@ -151,7 +153,7 @@ class simple_CSTR:
         # Object variable definitions
         self.u_min = np.double(np.array([0.]))  # lower bound of inputs
         self.u_max = np.double(np.array([1.]))  # upper bound of inputs
-        self.nx, self.nu, self.x_init = 1, 1, np.array([(0.2-0.5)/0.5])
+        self.nx, self.nu, self.x_init = 1, 1, np.array([(0.0-0.5)/0.5])
         self.nsp   = self.nx
         self.dt    = 0.1
     # --- dynamic model definition --- #
@@ -171,7 +173,7 @@ class simple_CSTR:
 
     # --- simulation --- #
     def reset(self, set_point):
-        return self.x_init, self.x_init - set_point
+        return self.x_init, self.x_init*0.5+0.5 - set_point
 
     def simulation(self, controls, tf, x0, set_point):
         '''

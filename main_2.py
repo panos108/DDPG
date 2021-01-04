@@ -23,9 +23,9 @@ controls = np.array([[1]])  # for _ in range(ttt.size-1)]])
 x0 = np.array([0, 0])
 
 m = ModelIntegration(p)
-m.reset()
+m.reset(2.)
 xt, reward, done = m.simulation(controls, tf, x0, 1)
-print(m.reset())
+print(m.reset(2.))
 model = ModelIntegration(p)  # model_double_intergator()
 N_h = 5
 history = cosntract_history(model, N_h, store_u=True)
@@ -48,7 +48,7 @@ freq = p["freq"]
 
 for ep in range(num_episodes):
     # Save the initial state
-    x0 = model.reset()
+    x0 = model.reset(2.)[0]
     t = 0
     # Reset the total reward
     hist_states = cosntract_history(model, N_h, store_u=True)
@@ -74,11 +74,12 @@ for ep in range(num_episodes):
 
 
         # print('after: ', u)
-        for k in range(model.nu):
-            if u[k]<model.u_min:
-                u[k] = model.u_min
-            elif u[k]>model.u_max:
-                u[k] = model.u_max
+        if ep>5:
+            for k in range(model.nu):
+                if u[k]<model.u_min:
+                    u[k] = model.u_min
+                elif u[k]>model.u_max:
+                    u[k] = model.u_max
         u_his[:,i,ep] = u
         x_his[:,i,ep] = x0
         i+=1
@@ -93,15 +94,13 @@ for ep in range(num_episodes):
         x1[1] = d
         x0 = x1.copy()
 
-<<<<<<< HEAD
-        next_state = hist_states.append_history(x1, u)
+        next_state = hist_states.append_history(x1, [],u)
         #next_state = x1
         # next_state, reward, done =model.simulate(state, u, t, 0.0)# model.step(u)  # Change this to run with the regular funcs
         # next_state += 0.2*np.random.rand()
         # Train the agent with the new time step experience
-=======
 
->>>>>>> e4d92697b3713432ea4a01b72bc68a43b46d8d91
+
         agent.train(state, u, next_state, reward, int(done))
         # Update the episode's total reward
         total_reward += reward

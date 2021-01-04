@@ -99,7 +99,7 @@ class ReplayBuffer():
 
 
 class OUNoise():
-    def __init__(self, size, scale, mu=0.0, sigma=0.2, theta=0.15, decay=0.99):
+    def __init__(self, size, scale, mu=0.0, sigma=0.05, theta=0.15, decay=0.99):
         self.noise = np.zeros(size)
         self.size = size
         self.scale = scale
@@ -112,7 +112,8 @@ class OUNoise():
         self.noise = np.zeros(self.size)
         self.scale *= self.decay
 
-    def sample(self):
+    def sample(self,sigma=0.2):
+        #self.sigma = sigma
         sample = self.theta * (self.mu - self.noise) + self.sigma * np.random.randn(self.size)
         self.noise = sample * self.scale
         return self.noise
@@ -125,6 +126,7 @@ class ActorCriticAgent():
         state_size = model.size_states#np.prod(model.observation_space.shape)#
         # The number of action indices to select from
         action_size = model.nu#np.prod(model.action_space.shape) #
+        self.action_size = action_size
         # The continuous range of the actions
         action_range = [model.u_min, model.u_max]# [model.action_space.low, model.action_space.high] #
         # Defining the q network to use for modeling the Bellman equation
@@ -136,8 +138,10 @@ class ActorCriticAgent():
         self.action_range   = action_range
 
     # Function for getting an action to take in the given state
-    def get_action(self, state):
+    def get_action(self, state):#, ep):
         # Get the action from the network and add noise to it
+        #sigma = 0.2*np.exp(-0.01*ep)
+        self.noise_process = OUNoise(self.action_size, self.action_range[1] - self.action_range[0])
         return self.q_network.get_action([state])[0] + self.noise_process.sample()#, self.action_range[0], self.action_range[1])
 
     def get__deterministic_action(self, state):
